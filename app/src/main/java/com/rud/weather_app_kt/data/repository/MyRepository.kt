@@ -6,11 +6,7 @@ import com.rud.weather_app_kt.data.model.Weather
 class MyRepository(private val weatherDao: WeatherDao) {
     fun getAllWeatherEntry() = weatherDao.getAllWeatherEntry()
 
-    suspend fun addWeatherEntry(weather: Weather) {
-        weatherDao.upsert(weather)
-    }
+    fun addWeatherEntry(weather: Weather) = weatherDao.upsert(weather)
 
-    suspend fun removeWeatherEntry(id: Long) {
-        weatherDao.remove(id)
-    }
+    fun removeWeatherEntry(id: Long) = weatherDao.remove(id)
 }
