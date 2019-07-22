@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rud.weather_app_kt.R
 import com.rud.weather_app_kt.ViewModelFactory
 import com.rud.weather_app_kt.data.model.Weather
-import com.rud.weather_app_kt.ui.utils.ScopedFragment
 import com.rud.weather_app_kt.ui.weather_list.recyclerview.WeatherListAdapter
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -22,7 +22,7 @@ import org.kodein.di.generic.instance
 import timber.log.Timber
 import kotlin.random.Random
 
-class WeatherListFragment : ScopedFragment(), KodeinAware {
+class WeatherListFragment : Fragment(), KodeinAware {
     override val kodein: Kodein by closestKodein()
     private val viewModelFactory: ViewModelFactory by instance()
     lateinit var viewModel: WeatherListViewModel
@@ -48,6 +48,18 @@ class WeatherListFragment : ScopedFragment(), KodeinAware {
                 .subscribe({
                     Timber.d(it.size.toString())
                     redraw(it)
+                }, {
+                    Timber.e(it)
+                })
+        )
+
+        //test
+        disposable.add(
+            viewModel.getLondonCurrentWeather()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    Timber.d(it.toString())
                 }, {
                     Timber.e(it)
                 })

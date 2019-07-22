@@ -10,4 +10,6 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
     fun insertWeatherEntry(weather: Weather) = myRepository.addWeatherEntry(weather)
 
     fun removeWeatherEntry(weather: Weather) = myRepository.removeWeatherEntry(weather.id)
+
+    fun getLondonCurrentWeather() = myRepository.getCurrentWeather("London")
 }
