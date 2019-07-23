@@ -4,30 +4,29 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.rud.weather_app_kt.R
 import com.rud.weather_app_kt.ViewModelFactory
-import com.rud.weather_app_kt.data.model.Weather
+import com.rud.weather_app_kt.data.model.WeatherEntry
+import com.rud.weather_app_kt.hideKeyboard
 import com.rud.weather_app_kt.ui.weather_list.recyclerview.WeatherListAdapter
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.screen_list.*
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
 import timber.log.Timber
-import kotlin.random.Random
 
 class WeatherListFragment : Fragment(), KodeinAware {
     override val kodein: Kodein by closestKodein()
     private val viewModelFactory: ViewModelFactory by instance()
     lateinit var viewModel: WeatherListViewModel
 
-    private val disposable = CompositeDisposable()
+    lateinit var weatherAdapter: WeatherListAdapter
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.screen_list, container, false)
@@ -37,77 +36,34 @@ class WeatherListFragment : Fragment(), KodeinAware {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherListViewModel::class.java)
 
-        btn_add_random.setOnClickListener {
-            addWeatherEntry(Weather("Test ${Random.nextInt()}", 123f))
+        btn_add.setOnClickListener {
+            viewModel.addWeatherEntry(et_location_name.text.toString(),
+                onError = {
+                    Toast.makeText(activity, "This city does not exist", Toast.LENGTH_SHORT)
+                })
+
+            et_location_name.setText("")
+            hideKeyboard()
         }
 
-        disposable.add(
-            viewModel.getAllWeatherEntries()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Timber.d(it.size.toString())
-                    redraw(it)
-                }, {
-                    Timber.e(it)
-                })
-        )
-
-        //test
-        disposable.add(
-            viewModel.getLondonCurrentWeather()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Timber.d(it.toString())
-                }, {
-                    Timber.e(it)
-                })
-        )
-    }
-
-    private fun redraw(data: List<Weather>) {
+        // init recyclerview
         recyclerView.apply {
             layoutManager = LinearLayoutManager(activity)
-            adapter = WeatherListAdapter(data) {
-                weatherEntryClicked(it)
-            }
+            weatherAdapter = WeatherListAdapter()
+            weatherAdapter.setOnClickListener { weatherEntryClicked(it) }
+            adapter = weatherAdapter
         }
+
+        viewModel.fetchData()
+
+        // observe on the data
+        viewModel.weatherList.observe(this, Observer { data ->
+            Timber.d("changes observed, len=${data.size}")
+            weatherAdapter.setData(data)
+        })
     }
 
-    private fun weatherEntryClicked(weather: Weather) {
-        removeWeatherEntry(weather)
-        recyclerView.adapter?.notifyDataSetChanged()
-    }
-
-    private fun addWeatherEntry(weather: Weather) {
-        disposable.add(
-            viewModel.insertWeatherEntry(weather)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Timber.d("add success")
-                }, {
-                    Timber.e(it)
-                })
-        )
-    }
-
-    private fun removeWeatherEntry(weather: Weather) {
-        disposable.add(
-            viewModel.removeWeatherEntry(weather)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe({
-                    Timber.d("remove success")
-                }, {
-                    Timber.e(it)
-                })
-        )
-    }
-
-    override fun onDestroy() {
-        disposable.clear()
-        super.onDestroy()
+    private fun weatherEntryClicked(weatherEntry: WeatherEntry) {
+        viewModel.removeWeatherEntry(weatherEntry)
     }
 }
