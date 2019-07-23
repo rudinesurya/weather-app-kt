@@ -10,7 +10,7 @@ import io.reactivex.Flowable
 
 @Dao
 interface WeatherDao {
-    @Query("SELECT * FROM weather_table")
+    @Query("SELECT * FROM weather_table ORDER BY city ASC")
     fun getAllWeatherEntry(): Flowable<List<WeatherEntry>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)

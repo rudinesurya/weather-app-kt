@@ -36,6 +36,14 @@ class WeatherListFragment : Fragment(), KodeinAware {
         super.onViewCreated(view, savedInstanceState)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherListViewModel::class.java)
 
+        swipe_refresh.setOnRefreshListener {
+            Timber.d("refreshing")
+            viewModel.updated = false
+            viewModel.fetchData(onComplete = {
+                swipe_refresh.isRefreshing = false
+            })
+        }
+
         btn_add.setOnClickListener {
             viewModel.addWeatherEntry(et_location_name.text.toString(),
                 onError = {

@@ -17,18 +17,35 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
         get() = _weatherList
 
     private val disposable = CompositeDisposable()
+    var updated = false
 
-    fun fetchData() {
+    fun fetchData(onComplete: () -> Unit = {}) {
         disposable.add(
             myRepository.getAllWeatherEntry()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
+
+                    // update all entry with latest info from remote server
+                    if (!updated) {
+                        updated = true
+
+                        Timber.d("Updating all weather entries")
+                        updateWeatherEntries(it)
+                    }
+
                     _weatherList.postValue(it)
+                    onComplete()
                 }, {
                     Timber.e(it)
                 })
         )
+    }
+
+    private fun updateWeatherEntries(weatherEntries: List<WeatherEntry>?) {
+        weatherEntries?.forEach {
+            addWeatherEntry(it.city)
+        }
     }
 
     fun addWeatherEntry(locationName: String, onComplete: () -> Unit = {}, onError: () -> Unit = {}) {
