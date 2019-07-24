@@ -9,6 +9,8 @@ class MyRepository(private val weatherDao: WeatherDao, private val apixuDataSour
 
     fun addWeatherEntry(weatherEntry: WeatherEntry) = weatherDao.upsert(weatherEntry)
 
+    fun addWeatherEntries(weatherEntries: List<WeatherEntry>) = weatherDao.upsertAll(weatherEntries)
+
     fun removeWeatherEntry(weatherEntry: WeatherEntry) = weatherDao.remove(weatherEntry.city)
 
     fun getCurrentWeather(location: String) = apixuDataSource.getCurrentWeather(location)

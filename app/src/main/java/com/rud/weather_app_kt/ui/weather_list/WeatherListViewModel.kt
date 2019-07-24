@@ -19,7 +19,13 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
     private val disposable = CompositeDisposable()
     var updated = false
 
+    init {
+        fetchData()
+    }
+
     fun fetchData(onComplete: () -> Unit = {}) {
+        Timber.d("fetching weather entries")
+
         disposable.add(
             myRepository.getAllWeatherEntry()
                 .subscribeOn(Schedulers.io())
@@ -27,7 +33,7 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
                 .subscribe({
 
                     // update all entry with latest info from remote server
-                    if (!updated) {
+                    if (!updated && it.isNotEmpty()) {
                         updated = true
 
                         Timber.d("Updating all weather entries")
@@ -42,13 +48,17 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
         )
     }
 
-    private fun updateWeatherEntries(weatherEntries: List<WeatherEntry>?) {
-        weatherEntries?.forEach {
+    private fun updateWeatherEntries(weatherEntries: List<WeatherEntry>) {
+        weatherEntries.forEach {
             addWeatherEntry(it.city)
         }
     }
 
-    fun addWeatherEntry(locationName: String, onComplete: () -> Unit = {}, onError: () -> Unit = {}) {
+    private fun createWeatherEntry(
+        locationName: String,
+        onComplete: (WeatherEntry) -> Unit = {},
+        onError: () -> Unit = {}
+    ) {
         val upperCase = locationName.trim().toUpperCase()
 
         // fetch weather data
@@ -66,20 +76,7 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
                         conditionCode = it.current.condition.code
                     )
 
-                    Timber.d(weather.toString())
-
-                    disposable.add(
-                        myRepository.addWeatherEntry(weather)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe({
-                                Timber.d("add success")
-                                onComplete()
-                            }, {
-                                Timber.e(it)
-                                onError()
-                            })
-                    )
+                    onComplete(weather)
                 }, {
                     Timber.e(it)
                     onError()
@@ -87,16 +84,42 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
         )
     }
 
-    fun removeWeatherEntry(weatherEntry: WeatherEntry, onComplete: () -> Unit = {}) {
+    fun addWeatherEntry(locationName: String, onComplete: () -> Unit = {}, onError: () -> Unit = {}) {
+        createWeatherEntry(locationName, onComplete = {
+            addWeatherEntryToDb(it, onComplete = {
+                onComplete()
+            }, onError = {
+                onError()
+            })
+        }, onError = {
+            onError()
+        })
+    }
+
+    fun addWeatherEntryToDb(weather: WeatherEntry, onComplete: () -> Unit = {}, onError: () -> Unit = {}) {
+        disposable.add(
+            myRepository.addWeatherEntry(weather)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({
+                    onComplete()
+                }, {
+                    Timber.e(it)
+                    onError()
+                })
+        )
+    }
+
+    fun removeWeatherEntry(weatherEntry: WeatherEntry, onComplete: () -> Unit = {}, onError: () -> Unit = {}) {
         disposable.add(
             myRepository.removeWeatherEntry(weatherEntry)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({
-                    Timber.d("remove success")
                     onComplete()
                 }, {
                     Timber.e(it)
+                    onError()
                 })
         )
     }

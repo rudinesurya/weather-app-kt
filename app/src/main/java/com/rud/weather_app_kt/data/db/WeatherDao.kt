@@ -16,6 +16,9 @@ interface WeatherDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsert(weatherEntry: WeatherEntry): Completable
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun upsertAll(weatherEntries: List<WeatherEntry>): Completable
+
     @Query("DELETE FROM weather_table WHERE city = :city")
     fun remove(city: String): Completable
 }

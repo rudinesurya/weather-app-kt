@@ -19,7 +19,6 @@ import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
-import timber.log.Timber
 
 class WeatherListFragment : Fragment(), KodeinAware {
     override val kodein: Kodein by closestKodein()
@@ -37,7 +36,6 @@ class WeatherListFragment : Fragment(), KodeinAware {
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(WeatherListViewModel::class.java)
 
         swipe_refresh.setOnRefreshListener {
-            Timber.d("refreshing")
             viewModel.updated = false
             viewModel.fetchData(onComplete = {
                 swipe_refresh.isRefreshing = false
@@ -62,11 +60,8 @@ class WeatherListFragment : Fragment(), KodeinAware {
             adapter = weatherAdapter
         }
 
-        viewModel.fetchData()
-
         // observe on the data
         viewModel.weatherList.observe(this, Observer { data ->
-            Timber.d("changes observed, len=${data.size}")
             weatherAdapter.setData(data)
         })
     }

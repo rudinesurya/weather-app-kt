@@ -26,14 +26,15 @@
             android:text="London"
             android:textSize="6pt" />
 
-        <TextView
-            android:id="@+id/tv_local_time"
+        <TextClock
+            android:id="@+id/local_clock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_margin="8dp"
-            android:text="4pm"
-            android:textSize="6pt" />
+            android:format12Hour="hh:mm"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tv_temperature"

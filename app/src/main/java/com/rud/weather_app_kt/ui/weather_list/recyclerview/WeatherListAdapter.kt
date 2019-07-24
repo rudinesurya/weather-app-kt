@@ -23,7 +23,8 @@ class WeatherListAdapter :
         fun bind(weatherEntry: WeatherEntry, position: Int, clickListener: (WeatherEntry) -> Unit) = with(itemView) {
             tv_city_name.text = weatherEntry.city
             tv_temperature.text = weatherEntry.temperature.toString()
-            tv_local_time.text = weatherEntry.timezone
+
+            local_clock.timeZone = weatherEntry.timezone
 
             Glide.with(this).load(getBackgroundImage(position)).into(item_background)
             Glide.with(this).load(getConditionIcon(weatherEntry.conditionCode)).into(icon_condition)
