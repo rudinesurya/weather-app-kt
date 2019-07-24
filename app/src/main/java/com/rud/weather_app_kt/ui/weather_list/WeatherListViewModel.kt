@@ -61,9 +61,9 @@ class WeatherListViewModel(private val myRepository: MyRepository) : ViewModel()
                     // create the weather entry
                     val weather = WeatherEntry(
                         city = upperCase,
-                        localTime = it.location.localtime,
+                        timezone = it.location.tzId,
                         temperature = it.current.tempC,
-                        condition = it.current.condition.text
+                        conditionCode = it.current.condition.code
                     )
 
                     Timber.d(weather.toString())

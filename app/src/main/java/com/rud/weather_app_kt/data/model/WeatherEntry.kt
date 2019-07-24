@@ -7,7 +7,7 @@ import androidx.room.PrimaryKey
 data class WeatherEntry(
     @PrimaryKey(autoGenerate = false)
     val city: String,
-    val localTime: String,
+    val timezone: String,
     val temperature: Double,
-    val condition: String
+    val conditionCode: Int
 )
